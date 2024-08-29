@@ -14,6 +14,7 @@ function addContainerListeners(currentContainer) {
     addItemBtnListeners(currentAddItemBtn);
     closingFormBtnListeners(currentCloseFormBtn);
     addFormSubmitListeners(currentForm);
+    addDragDropListeners(currentContainer);
 }
 itemsContainer.forEach((container) => {
     addContainerListeners(container);
@@ -84,10 +85,11 @@ function createNewItem(e) {
     if (actualTextInput.value.length >= 1) {
         actualUl.insertAdjacentHTML('beforeend', li);
     }
-    //DELETE LI ITEM
+    //Delete li item
     const item = actualUl.lastElementChild;
     const liBtn = item.querySelector('button');
     handleItemDeletion(liBtn);
+    addDragDropListeners(item);
     actualTextInput.value = '';
 }
 function handleItemDeletion(btn) {
@@ -104,7 +106,7 @@ const validationNewContainer = document.querySelector('.add-new-container .valid
 const addContainerCloseBtn = document.querySelector('.close-add-list');
 const addNewContainer = document.querySelector('.add-new-container');
 const containerList = document.querySelector('.main-content');
-//TOGGLE FORM: new container
+//Toggle Form: new container
 addContainerBtn.addEventListener('click', () => {
     toggleForm(addContainerBtn, addContainerForm, true);
     console.log('OPEN NEW CONTAINER');
@@ -146,3 +148,36 @@ function createNewContainer(e) {
     addContainerFormInput.value = '';
     addContainerListeners(newContainer);
 }
+//DRAG & DROP ACTION
+function addDragDropListeners(element) {
+    element.addEventListener('dragstart', handleDragStart);
+    element.addEventListener('dragover', handleDragOver);
+    element.addEventListener('drop', handleDrop);
+    element.addEventListener('dragend', handleDragEnd);
+}
+let dragSrcEl; //élément dynamique avec lequel il y a interaction ()
+function handleDragStart(e) {
+    var _a;
+    e.stopPropagation();
+    // Si un container est déjà ouvert
+    if (actualContainer)
+        toggleForm(actualBtn, actualForm, false);
+    dragSrcEl = this;
+    (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData('text/html', this.innerHTML);
+    console.log('DRAGSTART', e);
+}
+function handleDragOver(e) {
+    e.preventDefault();
+}
+function handleDrop(e) {
+    console.log('DROP', e);
+    e.stopPropagation();
+    const receptionEl = this;
+    if (dragSrcEl.nodeName === 'LI' && receptionEl.classList.contains('items-container')) {
+        receptionEl.querySelector('ul').appendChild(dragSrcEl); //rajoute l'item dans la liste du container dans lequel on drop l'item
+        //Les évènements disparaissent
+        addDragDropListeners(dragSrcEl); // on lui rajoute cet événement pour pouvoir le déplacer à nouveau
+        handleItemDeletion(dragSrcEl.querySelector('button')); // + cet événment si on désire le supprimer
+    }
+}
+function handleDragEnd() { }
