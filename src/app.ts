@@ -22,6 +22,7 @@ function addContainerListeners(currentContainer: HTMLDivElement) {
     addItemBtnListeners(currentAddItemBtn)
     closingFormBtnListeners(currentCloseFormBtn)
     addFormSubmitListeners(currentForm)
+    addDragDropListeners(currentContainer)
 }
 
 itemsContainer.forEach((container: HTMLDivElement) => {
@@ -103,10 +104,11 @@ function createNewItem(e: Event) {
         actualUl.insertAdjacentHTML('beforeend', li);
     }
 
-    //DELETE LI ITEM
+    //Delete li item
     const item = actualUl.lastElementChild as HTMLLIElement;
     const liBtn = item.querySelector('button') as HTMLButtonElement;
     handleItemDeletion(liBtn);
+    addDragDropListeners(item);
     actualTextInput.value = '';
 }
 
@@ -127,7 +129,7 @@ const addContainerCloseBtn = document.querySelector('.close-add-list') as HTMLBu
 const addNewContainer = document.querySelector('.add-new-container') as HTMLDivElement;
 const containerList = document.querySelector('.main-content') as HTMLDivElement;
 
-//TOGGLE FORM: new container
+//Toggle Form: new container
 addContainerBtn.addEventListener('click', () => {
     toggleForm(addContainerBtn, addContainerForm, true);
     console.log('OPEN NEW CONTAINER');
@@ -173,3 +175,41 @@ function createNewContainer(e: Event) {
     addContainerFormInput.value = '';
     addContainerListeners(newContainer);
 }
+
+//DRAG & DROP ACTION
+function addDragDropListeners(element: HTMLElement) {
+    element.addEventListener('dragstart', handleDragStart);
+    element.addEventListener('dragover', handleDragOver);
+    element.addEventListener('drop', handleDrop);
+    element.addEventListener('dragend', handleDragEnd);
+}
+
+let dragSrcEl: HTMLElement //élément dynamique avec lequel il y a interaction ()
+
+function handleDragStart(this: HTMLElement, e: DragEvent) {
+    e.stopPropagation();
+    // Si un container est déjà ouvert
+    if (actualContainer) toggleForm(actualBtn, actualForm, false);
+    dragSrcEl = this;
+    e.dataTransfer?.setData('text/html', this.innerHTML)
+    console.log('DRAGSTART', e);
+    
+}
+function handleDragOver(e: DragEvent) {
+    e.preventDefault()
+}
+
+function handleDrop(this: HTMLElement, e: DragEvent) {
+    console.log('DROP', e);
+    e.stopPropagation()
+    const receptionEl = this;
+    
+    if(dragSrcEl.nodeName === 'LI' && receptionEl.classList.contains('items-container')) {
+        (receptionEl.querySelector('ul')as HTMLUListElement).appendChild(dragSrcEl); //rajoute l'item dans la liste du container dans lequel on drop l'item
+        //Les évènements disparaissent
+        addDragDropListeners(dragSrcEl) // on lui rajoute cet événement pour pouvoir le déplacer à nouveau
+        handleItemDeletion(dragSrcEl.querySelector('button') as HTMLButtonElement) // + cet événment si on désire le supprimer
+    }
+}
+
+function handleDragEnd() {}
