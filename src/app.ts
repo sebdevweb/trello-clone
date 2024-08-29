@@ -14,9 +14,14 @@ function addContainerListeners(currentContainer: HTMLDivElement) {
 
     const currentContainerDeletionBtn = currentContainer.querySelector('.delete-container-btn') as HTMLButtonElement;
     const currentAddItemBtn = currentContainer.querySelector('.add-item-btn') as HTMLButtonElement;
+    const currentCloseFormBtn = currentContainer.querySelector('.close-form-btn') as HTMLButtonElement;
+    const currentForm = currentContainer.querySelector('form') as HTMLFormElement;
 
+    // listeners
     deleteBtnListeners(currentContainerDeletionBtn)
     addItemBtnListeners(currentAddItemBtn)
+    closingFormBtnListeners(currentCloseFormBtn)
+    addFormSubmitListeners(currentForm)
 }
 
 itemsContainer.forEach((container: HTMLDivElement) => {
@@ -67,4 +72,47 @@ function toggleForm(btn: HTMLButtonElement, form: HTMLFormElement, action: Boole
         form.style.display = 'block';
         btn.style.display = 'none';
     }
+}
+
+//CLOSE BTN ITEM ACTION
+function closingFormBtnListeners(btn: HTMLButtonElement) {
+    btn.addEventListener('click', () => toggleForm(actualBtn, actualForm, false));
+}
+
+//ADD FORM SUBMIT
+function addFormSubmitListeners(form: HTMLFormElement) {
+    form.addEventListener('submit', createNewItem);
+}
+
+function createNewItem(e: Event) {
+    e.preventDefault();
+    //Validation
+    if (actualTextInput.value.length === 0) {
+        actualValidation.textContent = 'Must be at least 1 character long';
+    } else {
+        actualValidation.textContent = '';
+    }
+    //Item creation
+    const itemContent = actualTextInput.value;
+    const li = 
+    `<li class="item" draggable="true">
+        <p>${itemContent}</p>
+        <button>X</button>
+    </li>`
+    if (actualTextInput.value.length >= 1) {
+        actualUl.insertAdjacentHTML('beforeend', li);
+    }
+
+    //DELETE LI ITEM
+    const item = actualUl.lastElementChild as HTMLLIElement;
+    const liBtn = item.querySelector('button') as HTMLButtonElement;
+    handleItemDeletion(liBtn);
+    actualTextInput.value = '';
+}
+
+function handleItemDeletion(btn: HTMLButtonElement) {
+    btn.addEventListener('click', () => {
+        const elToRemove = btn.parentElement as HTMLLIElement;
+        elToRemove.remove();
+    })
 }
