@@ -36,11 +36,17 @@ nav a {
     flex-shrink: 0;
     padding: 10px;
     width: 300px;
-    background: #f1f1f1;
+    background: #ff71e5cc;
     border-radius: 3px;
     margin: 10px;
     cursor: move;
     align-self: flex-start;
+}
+.items-container:nth-child(2) {
+    background: rgba(65, 214, 255, 0.824);
+}
+.items-container:nth-child(3) {
+    background: #cfff66d5;
 }
 
 .top-container {

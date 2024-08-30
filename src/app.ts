@@ -1,6 +1,6 @@
 const itemsContainer = document.querySelectorAll('.items-container') as NodeListOf<HTMLDivElement>
 
-//Declare dynamics variables
+// Declare dynamics variables
 let actualContainer: HTMLDivElement,
     actualBtn: HTMLButtonElement,
     actualUl: HTMLUListElement,
@@ -8,8 +8,8 @@ let actualContainer: HTMLDivElement,
     actualTextInput: HTMLInputElement,
     actualValidation: HTMLSpanElement;
 
-//Global function to ADD, DELETE, DRAG&DROP container
-//Fonction parent au container qui sertà rajouter tous les listeners
+// Global function to ADD, DELETE, DRAG&DROP container
+// Fonction parent au container qui sertà rajouter tous les listeners
 function addContainerListeners(currentContainer: HTMLDivElement) {
 
     const currentContainerDeletionBtn = currentContainer.querySelector('.delete-container-btn') as HTMLButtonElement;
@@ -30,7 +30,9 @@ itemsContainer.forEach((container: HTMLDivElement) => {
 });
 
 
-// DELETE ITEMS CONTAINER
+/*
+DELETE ITEMS CONTAINER
+*/ 
 function deleteBtnListeners(btn: HTMLButtonElement) {
     btn.addEventListener('click', handleContainerDeletion)
 }
@@ -44,7 +46,9 @@ function handleContainerDeletion(e: MouseEvent) {
     
 }
 
-//DISPLAYING FORM INPUT & submit BUTTON
+/*
+DISPLAYING FORM INPUT & submit BUTTON
+*/
 function addItemBtnListeners(btn: HTMLButtonElement) {
     btn.addEventListener('click', handleAddItem)
 }
@@ -75,25 +79,29 @@ function toggleForm(btn: HTMLButtonElement, form: HTMLFormElement, action: Boole
     }
 }
 
-//CLOSE BTN ITEM ACTION
+/*
+CLOSE BTN ITEM ACTION
+*/ 
 function closingFormBtnListeners(btn: HTMLButtonElement) {
     btn.addEventListener('click', () => toggleForm(actualBtn, actualForm, false));
 }
 
-//ADD FORM SUBMIT
+/*
+ADD FORM SUBMIT
+*/
 function addFormSubmitListeners(form: HTMLFormElement) {
     form.addEventListener('submit', createNewItem);
 }
 
 function createNewItem(e: Event) {
     e.preventDefault();
-    //Validation
+    // Validation
     if (actualTextInput.value.length === 0) {
         actualValidation.textContent = 'Must be at least 1 character long';
     } else {
         actualValidation.textContent = '';
     }
-    //Item creation
+    // Item creation
     const itemContent = actualTextInput.value;
     const li = 
     `<li class="item" draggable="true">
@@ -104,7 +112,7 @@ function createNewItem(e: Event) {
         actualUl.insertAdjacentHTML('beforeend', li);
     }
 
-    //Delete li item
+    // Delete li item
     const item = actualUl.lastElementChild as HTMLLIElement;
     const liBtn = item.querySelector('button') as HTMLButtonElement;
     handleItemDeletion(liBtn);
@@ -120,7 +128,9 @@ function handleItemDeletion(btn: HTMLButtonElement) {
 }
 
 
-//ADD NEW CONTAINER
+/*
+ADD NEW CONTAINER
+*/
 const addContainerBtn = document.querySelector('.add-container-btn') as HTMLButtonElement;
 const addContainerForm = document.querySelector('.add-new-container form') as HTMLFormElement;
 const addContainerFormInput = document.querySelector('.add-new-container input') as HTMLInputElement;
@@ -129,7 +139,7 @@ const addContainerCloseBtn = document.querySelector('.close-add-list') as HTMLBu
 const addNewContainer = document.querySelector('.add-new-container') as HTMLDivElement;
 const containerList = document.querySelector('.main-content') as HTMLDivElement;
 
-//Toggle Form: new container
+// Toggle Form: new container
 addContainerBtn.addEventListener('click', () => {
     toggleForm(addContainerBtn, addContainerForm, true);
     console.log('OPEN NEW CONTAINER');
@@ -141,7 +151,7 @@ addContainerCloseBtn.addEventListener('click', () => {
     console.log('CLOSE NEW CONTAINER');
 })
 
-//Add item on new container
+// Add item on new container
 addContainerForm.addEventListener('submit', createNewContainer);
 
 function createNewContainer(e: Event) {
@@ -176,7 +186,9 @@ function createNewContainer(e: Event) {
     addContainerListeners(newContainer);
 }
 
-//DRAG & DROP ACTION
+/*
+DRAG & DROP ACTION
+*/
 function addDragDropListeners(element: HTMLElement) {
     element.addEventListener('dragstart', handleDragStart);
     element.addEventListener('dragover', handleDragOver);
@@ -184,11 +196,11 @@ function addDragDropListeners(element: HTMLElement) {
     element.addEventListener('dragend', handleDragEnd);
 }
 
-let dragSrcEl: HTMLElement //élément dynamique avec lequel il y a interaction ()
+let dragSrcEl: HTMLElement // Dynamic element with which there is interaction
 
 function handleDragStart(this: HTMLElement, e: DragEvent) {
     e.stopPropagation();
-    // Si un container est déjà ouvert
+    // If a container is already open
     if (actualContainer) toggleForm(actualBtn, actualForm, false);
     dragSrcEl = this;
     e.dataTransfer?.setData('text/html', this.innerHTML)
@@ -204,12 +216,42 @@ function handleDrop(this: HTMLElement, e: DragEvent) {
     e.stopPropagation()
     const receptionEl = this;
     
+    // if it's li and if it's empty container
     if(dragSrcEl.nodeName === 'LI' && receptionEl.classList.contains('items-container')) {
-        (receptionEl.querySelector('ul')as HTMLUListElement).appendChild(dragSrcEl); //rajoute l'item dans la liste du container dans lequel on drop l'item
-        //Les évènements disparaissent
-        addDragDropListeners(dragSrcEl) // on lui rajoute cet événement pour pouvoir le déplacer à nouveau
-        handleItemDeletion(dragSrcEl.querySelector('button') as HTMLButtonElement) // + cet événment si on désire le supprimer
+        (receptionEl.querySelector('ul')as HTMLUListElement).appendChild(dragSrcEl); // Adds the item to the list of the container in which it's dropped
+        // Events are disappearing
+        addDragDropListeners(dragSrcEl) // Adding this event to it to be able to move it again
+        handleItemDeletion(dragSrcEl.querySelector('button') as HTMLButtonElement) // + This event if you wish to delete it
+    }
+
+    if(dragSrcEl !== this && this.classList[0] === dragSrcEl.classList[0]) {
+        dragSrcEl.innerHTML = this.innerHTML; // Element that is swapped, will take the innerHTML of the element on which it's placed
+        this.innerHTML = e.dataTransfer?.getData('text/html') as string; // Element on which it's placed will take the innerHTML of the element that was dragged
+
+        if(this.classList.contains('items-container')) {
+            addContainerListeners(this as HTMLDivElement)
+
+            this.querySelectorAll('li').forEach((li: HTMLLIElement) => {
+                handleItemDeletion(li.querySelector('button') as HTMLButtonElement)
+                addDragDropListeners(li)
+            })
+        } else {
+            addDragDropListeners(this)
+            handleItemDeletion(this.querySelector('button') as HTMLButtonElement)
+        }
     }
 }
 
-function handleDragEnd() {}
+// Add event on items that have been swapped
+function handleDragEnd(this: HTMLElement, e: DragEvent) {
+    e.stopPropagation()
+    if(this.classList.contains('items-container')) {
+        addContainerListeners(this as HTMLDivElement)
+        this.querySelectorAll('li').forEach((li: HTMLLIElement) => {
+            handleItemDeletion(li.querySelector('button') as HTMLButtonElement)
+            addDragDropListeners(li);
+        })
+    } else {
+        addDragDropListeners(this);
+    }
+}
